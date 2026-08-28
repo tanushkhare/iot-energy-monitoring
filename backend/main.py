@@ -1,11 +1,11 @@
 ﻿from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from backend.app.routers.video import router as video_router
+from backend.app.routers import energy_router
 import uvicorn
 
 app = FastAPI(
-    title="Automated Video Summarization & Keyframe Engine API",
-    description="Live video frame condensation, scene change heuristics, and keyframe telemetry.",
+    title="IoT Smart Grid Energy & Power Telemetry API",
+    description="High-frequency smart meter ingestion, load profiling, and power quality anomaly detection.",
     version="1.0.0"
 )
 
@@ -17,11 +17,11 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.include_router(video_router)
+app.include_router(energy_router.router)
 
 @app.get("/health")
-async def health():
-    return {"status": "healthy", "service": "video-summarizer-engine"}
+async def health_check():
+    return {"status": "healthy", "service": "iot-energy-monitoring"}
 
 if __name__ == "__main__":
     uvicorn.run("backend.main:app", host="0.0.0.0", port=8000, reload=True)
