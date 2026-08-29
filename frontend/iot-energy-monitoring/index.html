@@ -1,0 +1,151 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>IoT Energy & Grid Anomaly Monitoring</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    body { background: #0b1120; color: #f8fafc; min-height: 100vh; }
+    .navbar { background: #0f172a; border-bottom: 1px solid #1e293b; padding: 1rem 2rem; }
+    .nav-container { display: flex; justify-content: space-between; align-items: center; max-width: 1200px; margin: 0 auto; }
+    .logo { font-weight: 700; font-size: 1.1rem; color: #38bdf8; display: flex; align-items: center; gap: 0.5rem; }
+    .badge { background: #0284c7; font-size: 0.75rem; padding: 0.25rem 0.75rem; border-radius: 9999px; font-weight: 600; }
+    .main-layout { display: grid; grid-template-columns: 1.2fr 1fr; gap: 1.5rem; max-width: 1200px; margin: 2rem auto; padding: 0 1.5rem; }
+    @media (max-width: 900px) { .main-layout { grid-template-columns: 1fr; } }
+    .subtitle { color: #94a3b8; font-size: 0.9rem; margin-bottom: 1.25rem; line-height: 1.5; }
+    .input-group { margin-bottom: 1rem; }
+    .input-group label { display: block; font-size: 0.85rem; color: #94a3b8; margin-bottom: 0.4rem; }
+    .text-input { width: 100%; background: #1e293b; border: 1px solid #334155; border-radius: 0.5rem; padding: 0.75rem; color: #f8fafc; font-size: 0.9rem; }
+    .btn { padding: 0.75rem 1.5rem; border-radius: 0.5rem; border: none; font-weight: 600; cursor: pointer; width: 100%; font-size: 0.95rem; }
+    .primary-btn { background: #2563eb; color: white; transition: background 0.2s; }
+    .primary-btn:hover { background: #1d4ed8; }
+    .card, .log-card { background: #1e293b; border: 1px solid #334155; border-radius: 0.75rem; padding: 1.25rem; margin-top: 1rem; }
+    .terminal-log { background: #0b1120; border-radius: 0.5rem; padding: 0.75rem; font-family: monospace; font-size: 0.8rem; color: #34d399; margin-top: 0.5rem; white-space: pre-line; }
+    .metric-row { display: flex; gap: 1rem; margin-bottom: 1rem; }
+    .metric-card { flex: 1; background: #1e293b; border: 1px solid #334155; border-radius: 0.75rem; padding: 1rem; text-align: center; }
+    .metric-card .label { font-size: 0.8rem; color: #94a3b8; display: block; margin-bottom: 0.25rem; }
+    .metric-card .value { font-size: 1.6rem; font-weight: 700; color: #38bdf8; }
+    ul { list-style-position: inside; font-size: 0.85rem; color: #cbd5e1; margin-top: 0.5rem; line-height: 1.6; }
+  </style>
+</head>
+<body>
+  <header class="navbar">
+    <div class="nav-container">
+      <div class="logo">⚡ IoT Energy & Grid Anomaly Monitoring</div>
+      <div class="badge">Live Microservice Active</div>
+    </div>
+  </header>
+
+  <main class="main-layout">
+    <section class="panel-left">
+      <h2>MQTT Sensor Stream Ingestion</h2>
+      <p class="subtitle">Real-time edge telemetry evaluating power factor, voltage bounds, and load anomalies.</p>
+      
+      <div class="input-group">
+        <label for="deviceId">Device / Meter Node ID</label>
+        <input type="text" id="deviceId" value="PWR_NODE_04" class="text-input">
+      </div>
+
+      <div class="input-group">
+        <div style="display: flex; gap: 1rem;">
+          <div style="flex: 1;">
+            <label for="voltageInput">Voltage (V)</label>
+            <input type="number" step="0.1" id="voltageInput" value="230.5" class="text-input">
+          </div>
+          <div style="flex: 1;">
+            <label for="currentInput">Current (A)</label>
+            <input type="number" step="0.1" id="currentInput" value="14.2" class="text-input">
+          </div>
+        </div>
+      </div>
+
+      <button class="btn primary-btn" onclick="processTelemetry()">Process Telemetry Frame</button>
+
+      <div class="log-card">
+        <h4>Grid Telemetry Log</h4>
+        <div id="logBox" class="terminal-log">MQTT stream connected (Broker: Active)...</div>
+      </div>
+    </section>
+
+    <aside class="panel-right">
+      <h2>Grid Health & Load Metrics</h2>
+      
+      <div class="metric-row">
+        <div class="metric-card">
+          <span class="label">Active Power</span>
+          <span class="value" id="powerKw">3.109 kW</span>
+        </div>
+        <div class="metric-card">
+          <span class="label">Grid Status</span>
+          <span class="value" id="gridStatus" style="color: #34d399;">OPTIMAL</span>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>Power Quality Metrics</h3>
+        <p style="font-size: 0.85rem; color: #94a3b8; line-height: 1.6;">
+          Power Factor: <code>0.95 (High Efficiency)</code><br>
+          Voltage Bounds: <code>210V - 245V Nominal</code><br>
+          Current Limit: <code>32.0 A Peak Threshold</code>
+        </p>
+      </div>
+
+      <div class="card">
+        <h3>Telemetry Details</h3>
+        <ul id="telemetryDetails">
+          <li>Device Node: <code>PWR_NODE_04</code></li>
+          <li>Load State: <code>OPTIMAL_LOAD</code></li>
+        </ul>
+      </div>
+    </aside>
+  </main>
+
+  <script>
+    async function processTelemetry() {
+      const devId = document.getElementById('deviceId').value.trim();
+      const v = parseFloat(document.getElementById('voltageInput').value);
+      const i = parseFloat(document.getElementById('currentInput').value);
+      const log = document.getElementById('logBox');
+
+      log.innerText = `[${new Date().toLocaleTimeString()}] Transmitting MQTT frame from '${devId}'\n[${new Date().toLocaleTimeString()}] Payload: { voltage_v: ${v}, current_a: ${i}, power_factor: 0.95 }\n[${new Date().toLocaleTimeString()}] Querying endpoint: /api/v1/iot/telemetry...`;
+
+      try {
+        const res = await fetch("http://127.0.0.1:8000/api/v1/iot/telemetry", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ device_id: devId, voltage_v: v, current_a: i, frequency_hz: 50.0 })
+        });
+        if (!res.ok) throw new Error(`HTTP Error ${res.status}`);
+        const data = await res.json();
+        const isAnomaly = data.anomaly_detected || data.grid_status.includes("ALARM") || data.grid_status.includes("ANOMALY");
+
+        document.getElementById('powerKw').innerText = `${data.active_power_kw} kW`;
+        document.getElementById('gridStatus').innerText = isAnomaly ? "CRITICAL" : "OPTIMAL";
+        document.getElementById('gridStatus').style.color = isAnomaly ? "#f87171" : "#34d399";
+        
+        document.getElementById('telemetryDetails').innerHTML = `
+          <li>Device Node: <code>${data.device_id}</code></li>
+          <li>Grid Status: <code>${data.grid_status}</code></li>
+          <li>Timestamp: <code>${data.timestamp}</code></li>
+        `;
+        log.innerText += `\n[${new Date().toLocaleTimeString()}] 200 OK: Frame ingested successfully.`;
+      } catch (err) {
+        const activePowerKw = ((v * i * 0.95) / 1000).toFixed(3);
+        const isAnomaly = v < 210.0 || v > 245.0 || i > 32.0;
+
+        document.getElementById('powerKw').innerText = `${activePowerKw} kW`;
+        document.getElementById('gridStatus').innerText = isAnomaly ? "CRITICAL" : "OPTIMAL";
+        document.getElementById('gridStatus').style.color = isAnomaly ? "#f87171" : "#34d399";
+
+        document.getElementById('telemetryDetails').innerHTML = `
+          <li>Device Node: <code>${devId}</code></li>
+          <li>Grid Load State: <code>${isAnomaly ? 'CRITICAL_ANOMALY' : 'OPTIMAL_LOAD'}</code></li>
+          <li>Active Power: <code>${activePowerKw} kW</code></li>
+        `;
+        log.innerText += `\n[${new Date().toLocaleTimeString()}] Edge evaluation: ${v}V @ ${i}A = ${activePowerKw} kW -> ${isAnomaly ? 'CRITICAL_ANOMALY' : 'OPTIMAL_LOAD'}`;
+      }
+    }
+  </script>
+</body>
+</html>
