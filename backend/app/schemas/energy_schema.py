@@ -1,6 +1,5 @@
 ﻿from pydantic import BaseModel, Field
-from typing import Dict, Any, Optional
-from datetime import datetime
+from typing import List, Optional, Dict, Any
 
 class EnergyTelemetryIngest(BaseModel):
     device_id: str = Field(..., description="Smart energy meter ID (e.g. GRID-NODE-101)")
@@ -17,3 +16,8 @@ class EnergyTelemetryResponse(BaseModel):
     grid_status: str
     anomaly_detected: bool
     timestamp: str
+
+class GridTelemetryHistory(BaseModel):
+    device_id: str
+    total_samples: int
+    history: List[EnergyTelemetryResponse]

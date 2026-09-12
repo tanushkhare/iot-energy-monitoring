@@ -4,8 +4,8 @@ from backend.app.routers import energy_router
 import uvicorn
 
 app = FastAPI(
-    title="IoT Smart Grid Energy & Power Telemetry API",
-    description="High-frequency smart meter ingestion, load profiling, and power quality anomaly detection.",
+    title="IoT Smart Grid Energy Monitoring Gateway",
+    description="Real-time voltage, current, and active power telemetry pipeline with grid anomaly alerting.",
     version="1.0.0"
 )
 
@@ -20,7 +20,7 @@ app.add_middleware(
 app.include_router(energy_router.router)
 
 @app.get("/health")
-async def health_check():
+async def health():
     return {"status": "healthy", "service": "iot-energy-monitoring"}
 
 if __name__ == "__main__":
